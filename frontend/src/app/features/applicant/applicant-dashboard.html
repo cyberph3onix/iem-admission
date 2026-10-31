@@ -1,0 +1,93 @@
+<div class="container">
+  <h1>Applicant dashboard</h1>
+  @if (message()) { <div class="alert success" role="status">{{ message() }}</div> }
+  @if (error()) { <div class="alert error" role="alert">{{ error() }}</div> }
+  @if (loading()) { <p>Loading…</p> } @else {
+
+  @if (app(); as a) {
+    <section class="card" aria-labelledby="status-h">
+      <h2 id="status-h">Application status</h2>
+      <p>Status: <app-status-badge [status]="a.status" />
+        @if (a.status === STATUS.UNDER_REVIEW) { <span class="muted"> (the "Review" stage)</span> }</p>
+      <p>Course: <b>{{ courseName() }}</b></p>
+      @if (a.verification?.verified) { <p>✔ Your application has been verified.</p> }
+      @if (a.submittedAt) { <p>Submitted on {{ a.submittedAt | date: 'medium' }}</p> }
+      <p class="muted">History:
+        @for (h of a.statusHistory; track $index) { {{ h.status }} ({{ h.at | date: 'short' }}){{ $last ? '' : ' → ' }} }</p>
+      @if (a.status === STATUS.SELECTED) { <div class="alert success">Congratulations — your application was selected.</div> }
+      @if (a.status === STATUS.REJECTED) { <div class="alert error">Your application was not selected.</div> }
+    </section>
+  }
+
+  <section class="card" aria-labelledby="form-h">
+    <h2 id="form-h">1. Application details</h2>
+    @if (!isDraft()) { <p class="muted">Submitted applications are read-only.</p> }
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="grid">
+        <div class="field"><label for="course">Course / program</label>
+          <select id="course" formControlName="course"><option value="">Select…</option>
+            @for (c of courses(); track c._id) { <option [value]="c._id">{{ c.courseName }}</option> }</select>
+          @if (err('course')) { <div class="err">{{ err('course') }}</div> }</div>
+        <div class="field"><label for="fullName">Full name</label><input id="fullName" formControlName="fullName" />
+          @if (err('fullName')) { <div class="err">{{ err('fullName') }}</div> }</div>
+        <div class="field"><label for="dob">Date of birth</label><input id="dob" type="date" formControlName="dateOfBirth" />
+          @if (err('dateOfBirth')) { <div class="err">{{ err('dateOfBirth') }}</div> }</div>
+        <div class="field"><label for="gender">Gender</label>
+          <select id="gender" formControlName="gender"><option value="">Select…</option><option>Male</option><option>Female</option><option>Other</option></select>
+          @if (err('gender')) { <div class="err">{{ err('gender') }}</div> }</div>
+        <div class="field"><label for="guardian">Guardian name</label><input id="guardian" formControlName="guardianName" />
+          @if (err('guardianName')) { <div class="err">{{ err('guardianName') }}</div> }</div>
+        <div class="field"><label for="prev">Previous institution</label><input id="prev" formControlName="previousInstitution" />
+          @if (err('previousInstitution')) { <div class="err">{{ err('previousInstitution') }}</div> }</div>
+      </div>
+      <div class="field"><label for="address">Address</label><textarea id="address" rows="2" formControlName="address"></textarea>
+        @if (err('address')) { <div class="err">{{ err('address') }}</div> }</div>
+      @if (isDraft()) { <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : (app() ? 'Save changes' : 'Create application') }}</button> }
+    </form>
+  </section>
+
+  @if (app()) {
+  <section class="card" aria-labelledby="docs-h">
+    <h2 id="docs-h">2. Supporting documents</h2>
+    <p class="muted">Sample POC rules: PDF, JPEG or PNG, up to 2 MB each. Re-uploading replaces the earlier file.</p>
+    @for (t of types(); track t.key) {
+      <div class="field" style="border-top:1px solid var(--line);padding-top:8px">
+        <label [attr.for]="'f-' + t.key">{{ t.label }} {{ t.required ? '(required)' : '(optional)' }}</label>
+        @if (docOf(t.key); as d) {
+          <div>✔ {{ d.validationStatus }}: {{ d.originalName }} ({{ d.size }} bytes)
+            <button type="button" class="secondary" (click)="view(d)">View</button></div>
+        } @else { <div class="muted">✖ Not uploaded</div> }
+        @if (isDraft()) { <input [id]="'f-' + t.key" type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="upload(t, $event)" [disabled]="uploading()[t.key]" /> }
+        @if (uploading()[t.key]) { <div role="status">Uploading…</div> }
+        @if (uploadMsg()[t.key]?.text; as m) { <div [class]="uploadMsg()[t.key].ok ? 'muted' : 'err'" role="status">{{ m }}</div> }
+      </div>
+    }
+  </section>
+
+  <section class="card" aria-labelledby="fee-h">
+    <h2 id="fee-h">3. Application fee</h2>
+    @if (app()!.fee; as f) {
+      <p>✔ {{ f.status }}: {{ f.currency }} {{ f.amount }} — reference {{ f.paymentReference }} ({{ f.recordedAt | date: 'medium' }})</p>
+    } @else {
+      <p class="muted">Sample POC fee: INR 500. This only records the fee; there is no payment gateway.</p>
+      <div class="field"><label for="fee-ref">Payment reference</label>
+        <input id="fee-ref" type="text" maxlength="60" [value]="feeRef()" (input)="feeRef.set($any($event.target).value)" /></div>
+      <button type="button" (click)="recordFee()" [disabled]="feeBusy()">{{ feeBusy() ? 'Recording…' : 'Record fee' }}</button>
+    }
+    @if (feeMsg().text) { <div [class]="feeMsg().ok ? 'muted' : 'err'" role="status">{{ feeMsg().text }}</div> }
+  </section>
+
+  @if (isDraft()) {
+  <section class="card" aria-labelledby="sub-h">
+    <h2 id="sub-h">4. Review and submit</h2>
+    @if (missingLabels().length) {
+      <p>Still needed before you can submit:</p>
+      <ul class="checklist">@for (m of missingLabels(); track m) { <li>✖ {{ m }}</li> }</ul>
+    } @else { <p>✔ Everything required is complete.</p> }
+    <button type="button" (click)="submit()" [disabled]="submitting() || missingLabels().length > 0">{{ submitting() ? 'Submitting…' : 'Submit application' }}</button>
+    <p class="muted">After submitting you cannot edit the application.</p>
+  </section>
+  }
+  }
+  }
+</div>
