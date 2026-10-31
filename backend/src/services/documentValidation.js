@@ -1,5 +1,3 @@
-const fs = require('fs');
-
 // File signatures (magic bytes) for the supported formats.
 const SIGNATURES = {
   'application/pdf': (b) => b.slice(0, 5).toString('latin1') === '%PDF-',
@@ -9,22 +7,17 @@ const SIGNATURES = {
 };
 
 /**
- * Validate a file already saved on disk. Returns { ok, message, mimeType }.
+ * Validate an uploaded file buffer. Returns { ok, message, mimeType, size }.
  * The MIME type is detected from the bytes, not trusted from the browser.
  */
-function validateFile(filePath, { allowedMimeTypes, maxBytes }) {
-  const size = fs.statSync(filePath).size;
+function validateFile(buffer, { allowedMimeTypes, maxBytes }) {
+  const size = buffer.length;
   if (size === 0) return { ok: false, message: 'The file is empty.' };
   if (size > maxBytes) {
     return { ok: false, message: `The file exceeds the ${Math.round(maxBytes / 1024)} KB limit.` };
   }
-  const fd = fs.openSync(filePath, 'r');
-  const head = Buffer.alloc(16);
-  const read = fs.readSync(fd, head, 0, 16, 0);
-  fs.closeSync(fd);
-  const buf = head.slice(0, read);
-
-  const detected = Object.keys(SIGNATURES).find((mime) => SIGNATURES[mime](buf));
+  const head = buffer.subarray(0, 16);
+  const detected = Object.keys(SIGNATURES).find((mime) => SIGNATURES[mime](head));
   if (!detected || !allowedMimeTypes.includes(detected)) {
     return { ok: false, message: 'Unsupported or corrupt file. Allowed: PDF, JPEG, PNG.' };
   }

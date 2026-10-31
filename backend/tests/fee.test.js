@@ -1,7 +1,6 @@
-const fs = require('fs');
 const h = require('./helpers');
-beforeAll(h.connect); beforeEach(async () => { await h.reset(); fs.rmSync(process.env.UPLOAD_DIR, { recursive: true, force: true }); });
-afterAll(() => { fs.rmSync(process.env.UPLOAD_DIR, { recursive: true, force: true }); return require('mongoose').disconnect(); });
+beforeAll(h.connect); beforeEach(h.reset);
+afterAll(() => require('mongoose').disconnect());
 const postFee = (token, body) => h.request(h.app).post('/api/applications/me/fee').set(h.auth(token)).send(body);
 
 test('fee record: needs application, validated, one per application, visible to applicant and admin', async () => {

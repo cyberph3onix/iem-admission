@@ -4,7 +4,8 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs';
 import { User } from './models';
 
-export const API_URL = 'http://localhost:3000/api';
+// On localhost (ng serve) talk to the local backend; when deployed it is same-origin (Vercel routes /api to the backend).
+export const API_URL = location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 // POC choice: JWT in localStorage. It is simple but readable by any injected script (XSS);
 // production systems usually prefer httpOnly cookies.
 const TOKEN_KEY = 'iem_token';

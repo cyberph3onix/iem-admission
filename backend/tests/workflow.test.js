@@ -1,7 +1,6 @@
-const fs = require('fs');
 const h = require('./helpers');
-beforeAll(h.connect); beforeEach(async () => { await h.reset(); fs.rmSync(process.env.UPLOAD_DIR, { recursive: true, force: true }); });
-afterAll(() => { fs.rmSync(process.env.UPLOAD_DIR, { recursive: true, force: true }); return require('mongoose').disconnect(); });
+beforeAll(h.connect); beforeEach(h.reset);
+afterAll(() => require('mongoose').disconnect());
 const status = (id, token, s) => h.request(h.app).patch(`/api/admin/applications/${id}/status`).set(h.auth(token)).send({ status: s });
 
 const verify = (id, token, verified, remarks) => h.request(h.app).patch(`/api/admin/applications/${id}/verification`).set(h.auth(token)).send({ verified, remarks });

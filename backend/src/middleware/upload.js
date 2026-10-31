@@ -1,20 +1,9 @@
 const multer = require('multer');
-const crypto = require('crypto');
-const fs = require('fs');
 const config = require('../config');
 
-fs.mkdirSync(config.uploadDir, { recursive: true });
-
-// Random server-side name; the original filename is never used in a path.
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    fs.mkdirSync(config.uploadDir, { recursive: true });
-    cb(null, config.uploadDir);
-  },
-  filename: (_req, _file, cb) => cb(null, crypto.randomBytes(16).toString('hex')),
-});
-
+// Files are kept in memory, validated, then stored in MongoDB (serverless hosts have no persistent disk).
+// The original filename is display-only and never used as a path.
 module.exports = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: config.maxUploadBytes, files: 1 },
 }).single('file');

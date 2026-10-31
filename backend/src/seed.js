@@ -13,19 +13,25 @@ const COURSES = [
   ['MCA (Sample)', 'Sample program for the POC'],
 ];
 
-(async () => {
-  await connectDatabase(config.mongoUri);
+async function seed() {
   for (const [courseName, description] of COURSES) {
     await Course.updateOne({ courseName }, { $setOnInsert: { courseName, description, isActive: true } }, { upsert: true });
   }
   const email = (process.env.ADMIN_EMAIL || '').toLowerCase();
   const password = process.env.ADMIN_PASSWORD;
-  if (!email || !password) throw new Error('Set ADMIN_EMAIL and ADMIN_PASSWORD in .env');
+  if (!email || !password) throw new Error('Set ADMIN_EMAIL and ADMIN_PASSWORD');
   await User.updateOne(
     { email },
     { $setOnInsert: { name: process.env.ADMIN_NAME || 'Administrator', email, role: ROLES.ADMIN, passwordHash: await bcrypt.hash(password, 10) } },
     { upsert: true }
   );
-  console.log(`Seeded ${COURSES.length} courses and admin <${email}>.`);
-  process.exit(0);
-})().catch((e) => { console.error(e.message); process.exit(1); });
+  return { courses: COURSES.length, email };
+}
+module.exports = { seed };
+
+if (require.main === module) {
+  connectDatabase(config.mongoUri)
+    .then(seed)
+    .then((r) => { console.log(`Seeded ${r.courses} courses and admin <${r.email}>.`); process.exit(0); })
+    .catch((e) => { console.error(e.message); process.exit(1); });
+}
