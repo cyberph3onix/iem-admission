@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Injectable, inject } from '@angular/core';
 import { map } from 'rxjs';
 import { API_URL } from './auth.service';
-import { Application, Course, Fee, Dashboard, DocumentMeta, DocumentType } from './models';
+import { Application, Course, Fee, Dashboard, DocumentMeta, DocumentType, FormOptions } from './models';
 
 interface Res<T> { success: boolean; data: T; }
 
@@ -21,6 +21,8 @@ export class ApiService {
 
   courses() { return this.get<{ courses: Course[] }>('/courses').pipe(map((d) => d.courses)); }
   documentTypes() { return this.get<{ documentTypes: DocumentType[] }>('/document-types').pipe(map((d) => d.documentTypes)); }
+
+  formOptions() { return this.get<FormOptions>('/form-options'); }
 
   myApplication() { return this.get<{ application: Application }>('/applications/me').pipe(map((d) => d.application)); }
   createApplication(body: unknown) {

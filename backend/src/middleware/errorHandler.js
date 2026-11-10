@@ -7,7 +7,7 @@ function notFound(_req, res) {
 // eslint-disable-next-line no-unused-vars
 function errorHandler(err, _req, res, _next) {
   if (err instanceof multer.MulterError) {
-    const message = err.code === 'LIMIT_FILE_SIZE' ? 'The file is too large.' : `Upload error: ${err.message}`;
+    const message = err.code === 'LIMIT_FILE_SIZE' ? 'The file is too large (maximum 2 MB per file).' : `Upload error: ${err.message}`;
     return res.status(400).json({ success: false, message });
   }
   if (err.name === 'ValidationError') {

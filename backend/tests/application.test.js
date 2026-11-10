@@ -4,7 +4,7 @@ beforeAll(h.connect); beforeEach(h.reset); afterAll(() => require('mongoose').di
 test('create/get own application; duplicate rejected; invalid fields rejected', async () => {
   const course = await h.makeCourse(); const { token } = await h.register();
   const bad = await h.request(h.app).post('/api/applications').set(h.auth(token)).send({ fullName: 'x' });
-  expect(bad.status).toBe(400); expect(bad.body.errors.course).toBeTruthy();
+  expect(bad.status).toBe(400); expect(bad.body.errors.fullName).toBeTruthy(); expect(bad.body.errors.dateOfBirth).toBeTruthy();
   const ok = await h.request(h.app).post('/api/applications').set(h.auth(token)).send(h.validForm(course));
   expect(ok.status).toBe(201); expect(ok.body.data.application.status).toBe('Draft');
   const dup = await h.request(h.app).post('/api/applications').set(h.auth(token)).send(h.validForm(course));

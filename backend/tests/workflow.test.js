@@ -9,7 +9,7 @@ test('incomplete draft cannot be submitted and stays Draft', async () => {
   const course = await h.makeCourse(); const { token } = await h.register();
   await h.request(h.app).post('/api/applications').set(h.auth(token)).send(h.validForm(course));
   const res = await h.request(h.app).post('/api/applications/me/submit').set(h.auth(token));
-  expect(res.status).toBe(400); expect(res.body.errors.missingDocuments.length).toBe(2);
+  expect(res.status).toBe(400); expect(res.body.errors.missingDocuments.length).toBe(5);
   expect((await h.request(h.app).get('/api/applications/me').set(h.auth(token))).body.data.application.status).toBe('Draft');
 });
 test('full lifecycle with allowed and invalid transitions', async () => {

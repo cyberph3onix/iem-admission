@@ -9,7 +9,7 @@
       <h2 id="status-h">Application status</h2>
       <p>Status: <app-status-badge [status]="a.status" />
         @if (a.status === STATUS.UNDER_REVIEW) { <span class="muted"> (the "Review" stage)</span> }</p>
-      <p>Course: <b>{{ courseName() }}</b></p>
+      @if (courseName(a.course)) { <p>First preference: <b>{{ courseName(a.course) }}</b></p> }
       @if (a.verification?.verified) { <p>✔ Your application has been verified.</p> }
       @if (a.submittedAt) { <p>Submitted on {{ a.submittedAt | date: 'medium' }}</p> }
       <p class="muted">History:
@@ -19,42 +19,176 @@
     </section>
   }
 
-  <section class="card" aria-labelledby="form-h">
-    <h2 id="form-h">1. Application details</h2>
+  @if (opts(); as o) {
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
     @if (!isDraft()) { <p class="muted">Submitted applications are read-only.</p> }
-    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    @else { <p class="muted">Fields marked * are required to submit. You can save a draft at any time once Section A is complete.</p> }
+
+    <section class="card" aria-labelledby="a-h">
+      <h2 id="a-h">A. Personal information</h2>
       <div class="grid">
-        <div class="field"><label for="course">Course / program</label>
+        <div class="field"><label for="fullName">Full name *</label>
+          <input id="fullName" formControlName="fullName" maxlength="60" autocomplete="name" (input)="clearServerError('fullName')" />
+          @if (err('fullName')) { <div class="err">{{ err('fullName') }}</div> }</div>
+        <div class="field"><label for="dob">Date of birth *</label>
+          <input id="dob" type="date" formControlName="dateOfBirth" (input)="clearServerError('dateOfBirth')" />
+          @if (err('dateOfBirth')) { <div class="err">{{ err('dateOfBirth') }}</div> }</div>
+        <div class="field"><label for="gender">Gender *</label>
+          <select id="gender" formControlName="gender"><option value="">Select…</option>
+            @for (g of o.genders; track g) { <option [value]="g">{{ g }}</option> }</select>
+          @if (err('gender')) { <div class="err">{{ err('gender') }}</div> }</div>
+        <div class="field"><label for="email">Email (from your account)</label>
+          <input id="email" [value]="auth.user()?.email ?? ''" readonly disabled /></div>
+        <div class="field"><label for="mobile">Mobile number (from your account)</label>
+          <input id="mobile" [value]="auth.user()?.contactNumber || 'Not provided'" readonly disabled /></div>
+        <div class="field"><label for="guardian">Guardian name *</label>
+          <input id="guardian" formControlName="guardianName" maxlength="60" (input)="clearServerError('guardianName')" />
+          @if (err('guardianName')) { <div class="err">{{ err('guardianName') }}</div> }</div>
+        <div class="field"><label for="category">Category *</label>
+          <select id="category" formControlName="category"><option value="">Select…</option>
+            @for (c of o.categories; track c) { <option [value]="c">{{ c }}</option> }</select>
+          @if (err('category')) { <div class="err">{{ err('category') }}</div> }</div>
+        <div class="field"><label for="state">State / UT *</label>
+          <select id="state" formControlName="state"><option value="">Select…</option>
+            @for (s of o.states; track s) { <option [value]="s">{{ s }}</option> }</select>
+          @if (err('state')) { <div class="err">{{ err('state') }}</div> }</div>
+      </div>
+      <div class="field"><label for="address">Address *</label>
+        <textarea id="address" rows="2" maxlength="250" formControlName="address" (input)="clearServerError('address')"></textarea>
+        @if (err('address')) { <div class="err">{{ err('address') }}</div> }</div>
+    </section>
+
+    <section class="card" aria-labelledby="b-h">
+      <h2 id="b-h">B. Class 10 academic details</h2>
+      <div class="grid">
+        <div class="field"><label for="b10">Board *</label>
+          <select id="b10" formControlName="class10Board"><option value="">Select…</option>
+            @for (b of o.class10Boards; track b) { <option [value]="b">{{ b }}</option> }</select>
+          @if (err('class10Board')) { <div class="err">{{ err('class10Board') }}</div> }</div>
+        <div class="field"><label for="s10">School name *</label>
+          <input id="s10" formControlName="class10School" maxlength="100" (input)="clearServerError('class10School')" />
+          @if (err('class10School')) { <div class="err">{{ err('class10School') }}</div> }</div>
+        <div class="field"><label for="y10">Passing year *</label>
+          <input id="y10" type="number" step="1" [min]="o.minYear" [max]="year" formControlName="class10PassingYear" (input)="clearServerError('class10PassingYear')" />
+          @if (err('class10PassingYear')) { <div class="err">{{ err('class10PassingYear') }}</div> }</div>
+        <div class="field"><label for="t10">Total marks *</label>
+          <input id="t10" type="number" step="1" min="1" formControlName="class10TotalMarks" (input)="clearServerError('class10TotalMarks')" />
+          @if (err('class10TotalMarks')) { <div class="err">{{ err('class10TotalMarks') }}</div> }</div>
+        <div class="field"><label for="o10">Marks obtained *</label>
+          <input id="o10" type="number" step="1" min="0" formControlName="class10MarksObtained" (input)="clearServerError('class10MarksObtained')" />
+          @if (err('class10MarksObtained')) { <div class="err">{{ err('class10MarksObtained') }}</div> }</div>
+        <div class="field"><label for="p10">Percentage (calculated)</label>
+          <output id="p10" class="calc">{{ pct10() === null ? '—' : (pct10() | number: '1.0-2') + '%' }}</output></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="c-h">
+      <h2 id="c-h">C. Class 12 academic details</h2>
+      <div class="grid">
+        <div class="field"><label for="b12">Board *</label>
+          <select id="b12" formControlName="class12Board"><option value="">Select…</option>
+            @for (b of o.class12Boards; track b) { <option [value]="b">{{ b }}</option> }</select>
+          @if (err('class12Board')) { <div class="err">{{ err('class12Board') }}</div> }</div>
+        <div class="field"><label for="s12">School name *</label>
+          <input id="s12" formControlName="class12School" maxlength="100" (input)="clearServerError('class12School')" />
+          @if (err('class12School')) { <div class="err">{{ err('class12School') }}</div> }</div>
+        <div class="field"><label for="y12">Passing year *</label>
+          <input id="y12" type="number" step="1" [min]="o.minYear" [max]="year" formControlName="class12PassingYear" (input)="clearServerError('class12PassingYear')" />
+          @if (err('class12PassingYear')) { <div class="err">{{ err('class12PassingYear') }}</div> }</div>
+        <div class="field"><label for="st12">Stream *</label>
+          <select id="st12" formControlName="class12Stream"><option value="">Select…</option>
+            @for (s of o.streams; track s) { <option [value]="s">{{ s }}</option> }</select>
+          @if (err('class12Stream')) { <div class="err">{{ err('class12Stream') }}</div> }</div>
+        <div class="field"><label for="phy">Physics marks (out of 100) *</label>
+          <input id="phy" type="number" step="1" min="0" max="100" formControlName="class12Physics" (input)="clearServerError('class12Physics')" />
+          @if (err('class12Physics')) { <div class="err">{{ err('class12Physics') }}</div> }</div>
+        <div class="field"><label for="chem">Chemistry marks (out of 100) *</label>
+          <input id="chem" type="number" step="1" min="0" max="100" formControlName="class12Chemistry" (input)="clearServerError('class12Chemistry')" />
+          @if (err('class12Chemistry')) { <div class="err">{{ err('class12Chemistry') }}</div> }</div>
+        <div class="field"><label for="math">Mathematics marks (out of 100) *</label>
+          <input id="math" type="number" step="1" min="0" max="100" formControlName="class12Mathematics" (input)="clearServerError('class12Mathematics')" />
+          @if (err('class12Mathematics')) { <div class="err">{{ err('class12Mathematics') }}</div> }</div>
+        <div class="field"><label for="t12">Overall total marks *</label>
+          <input id="t12" type="number" step="1" min="1" formControlName="class12TotalMarks" (input)="clearServerError('class12TotalMarks')" />
+          @if (err('class12TotalMarks')) { <div class="err">{{ err('class12TotalMarks') }}</div> }</div>
+        <div class="field"><label for="o12">Overall marks obtained *</label>
+          <input id="o12" type="number" step="1" min="0" formControlName="class12MarksObtained" (input)="clearServerError('class12MarksObtained')" />
+          @if (err('class12MarksObtained')) { <div class="err">{{ err('class12MarksObtained') }}</div> }</div>
+        <div class="field"><label for="p12">Percentage (calculated)</label>
+          <output id="p12" class="calc">{{ pct12() === null ? '—' : (pct12() | number: '1.0-2') + '%' }}</output></div>
+      </div>
+      <p class="muted">Physics, Chemistry and Mathematics are individual subject marks. The overall total and marks obtained are your full aggregate and are entered separately.</p>
+    </section>
+
+    <section class="card" aria-labelledby="d-h">
+      <h2 id="d-h">D. Entrance examination</h2>
+      <div class="grid">
+        <div class="field"><label for="exam">Entrance exam *</label>
+          <select id="exam" formControlName="entranceExam"><option value="">Select…</option>
+            @for (x of o.entranceExams; track x) { <option [value]="x">{{ x }}</option> }</select>
+          @if (err('entranceExam')) { <div class="err">{{ err('entranceExam') }}</div> }</div>
+        <div class="field"><label for="ey">Exam year *</label>
+          <input id="ey" type="number" step="1" [min]="o.minYear" [max]="year" formControlName="entranceExamYear" (input)="clearServerError('entranceExamYear')" />
+          @if (err('entranceExamYear')) { <div class="err">{{ err('entranceExamYear') }}</div> }</div>
+        <div class="field"><label for="roll">Application / roll number *</label>
+          <input id="roll" formControlName="entranceRollNumber" maxlength="30" (input)="clearServerError('entranceRollNumber')" />
+          @if (err('entranceRollNumber')) { <div class="err">{{ err('entranceRollNumber') }}</div> }</div>
+        @if (exam() === 'JEE Main') {
+          <div class="field"><label for="jee">JEE Main percentile *</label>
+            <input id="jee" type="number" step="0.01" min="0" max="100" formControlName="jeeMainPercentile" (input)="clearServerError('jeeMainPercentile')" />
+            @if (err('jeeMainPercentile')) { <div class="err">{{ err('jeeMainPercentile') }}</div> }</div>
+        }
+        @if (exam() === 'WBJEE') {
+          <div class="field"><label for="wb">WBJEE rank *</label>
+            <input id="wb" type="number" step="1" min="1" formControlName="wbjeeRank" (input)="clearServerError('wbjeeRank')" />
+            @if (err('wbjeeRank')) { <div class="err">{{ err('wbjeeRank') }}</div> }</div>
+        }
+        @if (exam() === 'IEMJEE') {
+          <div class="field"><label for="iem">IEMJEE result (as printed on the scorecard) *</label>
+            <input id="iem" formControlName="iemjeeResult" maxlength="30" (input)="clearServerError('iemjeeResult')" />
+            @if (err('iemjeeResult')) { <div class="err">{{ err('iemjeeResult') }}</div> }</div>
+        }
+      </div>
+      @if (!exam()) { <p class="muted">Select an exam to enter its result.</p> }
+    </section>
+
+    <section class="card" aria-labelledby="e-h">
+      <h2 id="e-h">E. Course preferences</h2>
+      <div class="grid">
+        <div class="field"><label for="sess">Admission session *</label>
+          <select id="sess" formControlName="admissionSession"><option value="">Select…</option>
+            @for (s of o.admissionSessions; track s) { <option [value]="s">{{ s }}</option> }</select>
+          @if (err('admissionSession')) { <div class="err">{{ err('admissionSession') }}</div> }</div>
+        <div class="field"><label for="course">First course preference *</label>
           <select id="course" formControlName="course"><option value="">Select…</option>
             @for (c of courses(); track c._id) { <option [value]="c._id">{{ c.courseName }}</option> }</select>
           @if (err('course')) { <div class="err">{{ err('course') }}</div> }</div>
-        <div class="field"><label for="fullName">Full name</label><input id="fullName" formControlName="fullName" />
-          @if (err('fullName')) { <div class="err">{{ err('fullName') }}</div> }</div>
-        <div class="field"><label for="dob">Date of birth</label><input id="dob" type="date" formControlName="dateOfBirth" />
-          @if (err('dateOfBirth')) { <div class="err">{{ err('dateOfBirth') }}</div> }</div>
-        <div class="field"><label for="gender">Gender</label>
-          <select id="gender" formControlName="gender"><option value="">Select…</option><option>Male</option><option>Female</option><option>Other</option></select>
-          @if (err('gender')) { <div class="err">{{ err('gender') }}</div> }</div>
-        <div class="field"><label for="guardian">Guardian name</label><input id="guardian" formControlName="guardianName" />
-          @if (err('guardianName')) { <div class="err">{{ err('guardianName') }}</div> }</div>
-        <div class="field"><label for="prev">Previous institution</label><input id="prev" formControlName="previousInstitution" />
-          @if (err('previousInstitution')) { <div class="err">{{ err('previousInstitution') }}</div> }</div>
+        <div class="field"><label for="pref2">Second preference (optional)</label>
+          <select id="pref2" formControlName="coursePreference2"><option value="">None</option>
+            @for (c of prefOptions('coursePreference2'); track c._id) { <option [value]="c._id">{{ c.courseName }}</option> }</select>
+          @if (err('coursePreference2')) { <div class="err">{{ err('coursePreference2') }}</div> }</div>
+        <div class="field"><label for="pref3">Third preference (optional)</label>
+          <select id="pref3" formControlName="coursePreference3"><option value="">None</option>
+            @for (c of prefOptions('coursePreference3'); track c._id) { <option [value]="c._id">{{ c.courseName }}</option> }</select>
+          @if (err('coursePreference3')) { <div class="err">{{ err('coursePreference3') }}</div> }</div>
       </div>
-      <div class="field"><label for="address">Address</label><textarea id="address" rows="2" formControlName="address"></textarea>
-        @if (err('address')) { <div class="err">{{ err('address') }}</div> }</div>
-      @if (isDraft()) { <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : (app() ? 'Save changes' : 'Create application') }}</button> }
-    </form>
-  </section>
+    </section>
+
+    @if (isDraft()) {
+      <div class="card row"><button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : (app() ? 'Save draft' : 'Create draft application') }}</button></div>
+    }
+  </form>
+  }
 
   @if (app()) {
   <section class="card" aria-labelledby="docs-h">
-    <h2 id="docs-h">2. Supporting documents</h2>
-    <p class="muted">Sample POC rules: PDF, JPEG or PNG, up to 2 MB each. Re-uploading replaces the earlier file.</p>
+    <h2 id="docs-h">F. Supporting documents</h2>
+    <p class="muted">All five documents are required. Sample POC rules: PDF, JPEG or PNG, up to 2 MB each. Re-uploading replaces the earlier file.</p>
     @for (t of types(); track t.key) {
       <div class="field" style="border-top:1px solid var(--line);padding-top:8px">
-        <label [attr.for]="'f-' + t.key">{{ t.label }} {{ t.required ? '(required)' : '(optional)' }}</label>
+        <label [attr.for]="'f-' + t.key">{{ t.label }} {{ t.required ? '*' : '(optional)' }}</label>
         @if (docOf(t.key); as d) {
-          <div>✔ {{ d.validationStatus }}: {{ d.originalName }} ({{ d.size }} bytes)
+          <div>✔ {{ d.validationStatus }}: {{ d.originalName }} ({{ d.size | number }} bytes)
             <button type="button" class="secondary" (click)="view(d)">View</button></div>
         } @else { <div class="muted">✖ Not uploaded</div> }
         @if (isDraft()) { <input [id]="'f-' + t.key" type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="upload(t, $event)" [disabled]="uploading()[t.key]" /> }
@@ -65,7 +199,7 @@
   </section>
 
   <section class="card" aria-labelledby="fee-h">
-    <h2 id="fee-h">3. Application fee</h2>
+    <h2 id="fee-h">Application fee</h2>
     @if (app()!.fee; as f) {
       <p>✔ {{ f.status }}: {{ f.currency }} {{ f.amount }} — reference {{ f.paymentReference }} ({{ f.recordedAt | date: 'medium' }})</p>
     } @else {
@@ -79,9 +213,9 @@
 
   @if (isDraft()) {
   <section class="card" aria-labelledby="sub-h">
-    <h2 id="sub-h">4. Review and submit</h2>
+    <h2 id="sub-h">Review and submit</h2>
     @if (missingLabels().length) {
-      <p>Still needed before you can submit:</p>
+      <p>Still needed before you can submit (save your draft to refresh this list):</p>
       <ul class="checklist">@for (m of missingLabels(); track m) { <li>✖ {{ m }}</li> }</ul>
     } @else { <p>✔ Everything required is complete.</p> }
     <button type="button" (click)="submit()" [disabled]="submitting() || missingLabels().length > 0">{{ submitting() ? 'Submitting…' : 'Submit application' }}</button>

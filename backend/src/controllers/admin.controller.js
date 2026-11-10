@@ -3,7 +3,7 @@ const Application = require('../models/Application');
 const Document = require('../models/Document');
 const { STATUS, DOCUMENT_TYPES } = require('../config/constants');
 const { canAdminTransition } = require('../services/statusWorkflow');
-const { present } = require('./application.controller');
+const { present, POPULATE } = require('./application.controller');
 
 const isId = (v) => mongoose.isValidObjectId(v) && /^[0-9a-f]{24}$/i.test(String(v));
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -34,7 +34,7 @@ exports.list = async (req, res) => {
 
 exports.get = async (req, res) => {
   if (!isId(req.params.id)) return res.status(400).json({ success: false, message: 'Invalid identifier.' });
-  const app = await Application.findById(req.params.id).populate('course').populate('applicant', 'name email contactNumber');
+  const app = await Application.findById(req.params.id).populate(POPULATE).populate('applicant', 'name email contactNumber');
   if (!app || app.status === STATUS.DRAFT) return res.status(404).json({ success: false, message: 'Application not found.' });
   res.json({ success: true, data: { application: await present(app) } });
 };
@@ -58,7 +58,7 @@ exports.changeStatus = async (req, res) => {
     { _id: app._id, status: app.status },
     { $set: { status: next }, $push: { statusHistory: { status: next, at: new Date(), by: req.user._id } } },
     { returnDocument: 'after' }
-  ).populate('course');
+  ).populate(POPULATE);
   if (!updated) return res.status(409).json({ success: false, message: 'Status changed meanwhile; reload and retry.' });
   res.json({ success: true, data: { application: await present(updated) } });
 };
@@ -83,7 +83,7 @@ exports.verify = async (req, res) => {
   }
   app.verification = { verified, remarks: remarks ? remarks.trim() : undefined, by: req.user._id, at: new Date() };
   await app.save();
-  await app.populate('course');
+  await app.populate(POPULATE);
   res.json({ success: true, data: { application: await present(app) } });
 };
 

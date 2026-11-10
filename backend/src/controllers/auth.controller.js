@@ -14,8 +14,12 @@ exports.register = async (req, res) => {
   if (typeof name !== 'string' || !name.trim()) errors.name = 'Name is required.';
   if (typeof email !== 'string' || !EMAIL_RE.test(email.trim())) errors.email = 'A valid email is required.';
   if (typeof password !== 'string' || password.length < 8) errors.password = 'Password must be at least 8 characters.';
-  if (contactNumber != null && !/^[0-9+\-\s]{7,15}$/.test(String(contactNumber))) {
-    errors.contactNumber = 'Contact number is invalid.';
+  // Optional; if given it must be a 10-digit Indian mobile number (an optional +91 / 0 prefix is stripped).
+  let mobile;
+  if (contactNumber != null && String(contactNumber).trim() !== '') {
+    const digits = String(contactNumber).replace(/[\s-]/g, '').replace(/^(\+91|91|0)(?=\d{10}$)/, '');
+    if (/^[6-9]\d{9}$/.test(digits)) mobile = digits;
+    else errors.contactNumber = 'Enter a valid 10-digit Indian mobile number.';
   }
   if (Object.keys(errors).length) {
     return res.status(400).json({ success: false, message: 'Validation failed.', errors });
@@ -27,7 +31,7 @@ exports.register = async (req, res) => {
   const user = await User.create({
     name,
     email,
-    contactNumber,
+    contactNumber: mobile,
     passwordHash: await bcrypt.hash(password, 10),
     role: ROLES.APPLICANT,
   });

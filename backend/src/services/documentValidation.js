@@ -14,7 +14,7 @@ function validateFile(buffer, { allowedMimeTypes, maxBytes }) {
   const size = buffer.length;
   if (size === 0) return { ok: false, message: 'The file is empty.' };
   if (size > maxBytes) {
-    return { ok: false, message: `The file exceeds the ${Math.round(maxBytes / 1024)} KB limit.` };
+    return { ok: false, message: `The file exceeds the ${(maxBytes / 1048576).toFixed(maxBytes % 1048576 ? 2 : 0)} MB (${maxBytes.toLocaleString('en-US')} bytes) limit.` };
   }
   const head = buffer.subarray(0, 16);
   const detected = Object.keys(SIGNATURES).find((mime) => SIGNATURES[mime](head));

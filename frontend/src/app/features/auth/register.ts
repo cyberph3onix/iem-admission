@@ -22,8 +22,8 @@ import { AuthService } from '../../core/auth.service';
         <div class="field"><label for="email">Email</label>
           <input id="email" type="email" formControlName="email" autocomplete="email" />
           @if (msg('email')) { <div class="err">{{ msg('email') }}</div> }</div>
-        <div class="field"><label for="contactNumber">Contact number (optional)</label>
-          <input id="contactNumber" formControlName="contactNumber" autocomplete="tel" />
+        <div class="field"><label for="contactNumber">Mobile number (optional, 10 digits)</label>
+          <input id="contactNumber" type="tel" inputmode="numeric" maxlength="14" formControlName="contactNumber" autocomplete="tel" />
           @if (msg('contactNumber')) { <div class="err">{{ msg('contactNumber') }}</div> }</div>
         <div class="field"><label for="password">Password (min 8 characters)</label>
           <input id="password" type="password" formControlName="password" autocomplete="new-password" />
@@ -39,14 +39,14 @@ export class Register {
   form = this.fb.nonNullable.group({
     name: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    contactNumber: ['', Validators.pattern(/^[0-9+\-\s]{7,15}$|^$/)],
+    contactNumber: ['', Validators.pattern(/^\s*((\+91|91|0)[\s-]?)?[6-9]\d{4}[\s-]?\d{5}\s*$|^$/)],
     password: ['', [Validators.required, Validators.minLength(8)]],
   });
   busy = signal(false); error = signal(''); serverErrors = signal<Record<string, string>>({});
   msg(c: 'name' | 'email' | 'contactNumber' | 'password') {
     const x = this.form.controls[c];
     if (this.serverErrors()[c]) return this.serverErrors()[c];
-    return x.invalid && (x.touched || x.dirty) ? ({ name: 'Name is required.', email: 'Enter a valid email.', contactNumber: 'Enter a valid phone number.', password: 'At least 8 characters.' })[c] : '';
+    return x.invalid && (x.touched || x.dirty) ? ({ name: 'Name is required.', email: 'Enter a valid email.', contactNumber: 'Enter a valid 10-digit Indian mobile number.', password: 'At least 8 characters.' })[c] : '';
   }
   submit() {
     this.form.markAllAsTouched();

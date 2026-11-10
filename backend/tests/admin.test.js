@@ -33,7 +33,7 @@ test('dashboard counts, list filters, search and document download', async () =>
   expect((await list({ status: 'Bogus' })).status).toBe(400);
 
   const detail = await h.request(h.app).get(`/api/admin/applications/${ids[0]}`).set(h.auth(admin));
-  expect(detail.body.data.application.documents.length).toBe(2);
+  expect(detail.body.data.application.documents.length).toBe(5);
   expect(detail.body.data.application.nextStatuses).toEqual(['Selected', 'Rejected']);
   const docId = detail.body.data.application.documents[0]._id;
   expect((await h.request(h.app).get(`/api/admin/documents/${docId}/file`).set(h.auth(admin))).status).toBe(200);

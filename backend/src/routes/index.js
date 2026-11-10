@@ -18,6 +18,7 @@ router.get('/auth/me', authenticate, auth.me);
 
 router.get('/courses', authenticate, course.list);
 router.get('/document-types', authenticate, document.listTypes);
+router.get('/form-options', authenticate, course.formOptions);
 
 const applicant = [authenticate, authorizeRole(ROLES.APPLICANT)];
 router.post('/applications', applicant, application.create);
