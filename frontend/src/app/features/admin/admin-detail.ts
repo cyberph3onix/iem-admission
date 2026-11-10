@@ -93,7 +93,7 @@ export class AdminDetail implements OnInit {
       { title: 'B. Class 10', rows: [['Board', v(a.class10Board)], ['School', v(a.class10School)], ['Passing year', v(a.class10PassingYear)],
         ['Marks', `${v(a.class10MarksObtained)} / ${v(a.class10TotalMarks)}`], ['Percentage', pct(a.class10Percentage)]] },
       { title: 'C. Class 12', rows: [['Board', v(a.class12Board)], ['School', v(a.class12School)], ['Passing year', v(a.class12PassingYear)],
-        ['Stream', v(a.class12Stream)], ['Physics / Chemistry / Mathematics', `${v(a.class12Physics)} / ${v(a.class12Chemistry)} / ${v(a.class12Mathematics)}`],
+        ['Physics / Chemistry / Mathematics', `${v(a.class12Physics)} / ${v(a.class12Chemistry)} / ${v(a.class12Mathematics)}`],
         ['Overall marks', `${v(a.class12MarksObtained)} / ${v(a.class12TotalMarks)}`], ['Percentage', pct(a.class12Percentage)]] },
       { title: 'D. Entrance examination', rows: [['Exam', v(a.entranceExam)], ['Year', v(a.entranceExamYear)],
         ['Application / roll number', v(a.entranceRollNumber)], result as [string, string]] },

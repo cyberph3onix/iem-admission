@@ -36,7 +36,6 @@ const INDIAN_STATES = [
 ];
 const CLASS10_BOARDS = ['CBSE', 'ICSE', 'WBBSE', 'Other'];
 const CLASS12_BOARDS = ['CBSE', 'ISC', 'WBCHSE', 'Other'];
-const STREAMS = ['Science', 'Commerce', 'Arts', 'Other'];
 const ENTRANCE_EXAMS = ['JEE Main', 'WBJEE', 'IEMJEE'];
 // Which result field belongs to which exam; only that one is shown, stored and required.
 const EXAM_RESULT_FIELD = { 'JEE Main': 'jeeMainPercentile', WBJEE: 'wbjeeRank', IEMJEE: 'iemjeeResult' };
@@ -53,5 +52,5 @@ function admissionSessions(now = new Date()) {
 
 module.exports = {
   ROLES, STATUS, DOCUMENT_TYPES, APPLICATION_FEE, GENDERS, CATEGORIES, INDIAN_STATES, CLASS10_BOARDS,
-  CLASS12_BOARDS, STREAMS, ENTRANCE_EXAMS, EXAM_RESULT_FIELD, MIN_YEAR, admissionSessions,
+  CLASS12_BOARDS, ENTRANCE_EXAMS, EXAM_RESULT_FIELD, MIN_YEAR, admissionSessions,
 };

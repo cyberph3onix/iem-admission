@@ -61,7 +61,6 @@ export class ApplicantDashboard implements OnInit {
     // Section C
     class12Board: [''], class12School: ['', [notBlank, trimmedLength(2, 100)]],
     class12PassingYear: [null as number | null, [Validators.min(1950), Validators.max(this.year), integer]],
-    class12Stream: [''],
     class12Physics: [null as number | null, [Validators.min(0), Validators.max(100), integer]],
     class12Chemistry: [null as number | null, [Validators.min(0), Validators.max(100), integer]],
     class12Mathematics: [null as number | null, [Validators.min(0), Validators.max(100), integer]],

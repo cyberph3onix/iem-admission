@@ -48,7 +48,7 @@ test('BVA/EP: full name, guardian, address, date of birth, dropdowns', async () 
   await rejects(token, { dateOfBirth: today }, 'dateOfBirth');
   await rejects(token, { dateOfBirth: '2005-02-30' }, 'dateOfBirth');
   await rejects(token, { dateOfBirth: 'yesterday' }, 'dateOfBirth');
-  for (const [k, v] of [['gender', 'Unknown'], ['category', 'VIP'], ['state', 'Atlantis'], ['class10Board', 'IB'], ['class12Stream', '']]) {
+  for (const [k, v] of [['gender', 'Unknown'], ['category', 'VIP'], ['state', 'Atlantis'], ['class10Board', 'IB']]) {
     await rejects(token, { [k]: v }, k);
   }
 });

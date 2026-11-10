@@ -34,7 +34,7 @@ const personal = () => ({
 const validForm = (course) => ({
   ...personal(),
   class10Board: 'CBSE', class10School: 'Test School', class10PassingYear: 2020, class10TotalMarks: 500, class10MarksObtained: 450,
-  class12Board: 'WBCHSE', class12School: 'Test College', class12PassingYear: 2022, class12Stream: 'Science',
+  class12Board: 'WBCHSE', class12School: 'Test College', class12PassingYear: 2022,
   class12Physics: 80, class12Chemistry: 75, class12Mathematics: 90, class12TotalMarks: 500, class12MarksObtained: 400,
   entranceExam: 'JEE Main', entranceExamYear: 2022, entranceRollNumber: '00123', jeeMainPercentile: 95.5,
   admissionSession: admissionSessions()[0], course: String(course._id),

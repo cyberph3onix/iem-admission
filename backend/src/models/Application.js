@@ -36,7 +36,6 @@ const applicationSchema = new mongoose.Schema(
     class12Board: String,
     class12School: { type: String, trim: true },
     class12PassingYear: Number,
-    class12Stream: String,
     class12Physics: Number,
     class12Chemistry: Number,
     class12Mathematics: Number,

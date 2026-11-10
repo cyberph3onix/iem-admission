@@ -83,7 +83,6 @@ const FIELDS = {
   class12Board: { label: 'Class 12 board', required: true, check: oneOf(() => C.CLASS12_BOARDS) },
   class12School: { label: 'Class 12 school name', required: true, check: text(2, 100) },
   class12PassingYear: { label: 'Class 12 passing year', required: true, check: year() },
-  class12Stream: { label: 'Class 12 stream', required: true, check: oneOf(() => C.STREAMS) },
   class12Physics: { label: 'Physics marks', required: true, check: subjectMark },
   class12Chemistry: { label: 'Chemistry marks', required: true, check: subjectMark },
   class12Mathematics: { label: 'Mathematics marks', required: true, check: subjectMark },

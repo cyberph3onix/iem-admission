@@ -18,7 +18,7 @@ export interface Application {
   class10Board?: string; class10School?: string; class10PassingYear?: number; class10TotalMarks?: number;
   class10MarksObtained?: number; class10Percentage?: number;
   // Section C
-  class12Board?: string; class12School?: string; class12PassingYear?: number; class12Stream?: string;
+  class12Board?: string; class12School?: string; class12PassingYear?: number;
   class12Physics?: number; class12Chemistry?: number; class12Mathematics?: number;
   class12TotalMarks?: number; class12MarksObtained?: number; class12Percentage?: number;
   // Section D
@@ -33,7 +33,7 @@ export interface Application {
 }
 export interface FormOptions {
   genders: string[]; categories: string[]; states: string[]; class10Boards: string[]; class12Boards: string[];
-  streams: string[]; entranceExams: string[]; examResultField: Record<string, string>; admissionSessions: string[];
+  entranceExams: string[]; examResultField: Record<string, string>; admissionSessions: string[];
   minYear: number; currentYear: number; fieldLabels: Record<string, string>;
 }
 export const courseName = (c: Course | string | undefined | null) => (c && typeof c === 'object' ? c.courseName : '');

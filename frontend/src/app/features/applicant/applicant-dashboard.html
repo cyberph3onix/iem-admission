@@ -95,10 +95,6 @@
         <div class="field"><label for="y12">Passing year *</label>
           <input id="y12" type="number" step="1" [min]="o.minYear" [max]="year" formControlName="class12PassingYear" (input)="clearServerError('class12PassingYear')" />
           @if (err('class12PassingYear')) { <div class="err">{{ err('class12PassingYear') }}</div> }</div>
-        <div class="field"><label for="st12">Stream *</label>
-          <select id="st12" formControlName="class12Stream"><option value="">Select…</option>
-            @for (s of o.streams; track s) { <option [value]="s">{{ s }}</option> }</select>
-          @if (err('class12Stream')) { <div class="err">{{ err('class12Stream') }}</div> }</div>
         <div class="field"><label for="phy">Physics marks (out of 100) *</label>
           <input id="phy" type="number" step="1" min="0" max="100" formControlName="class12Physics" (input)="clearServerError('class12Physics')" />
           @if (err('class12Physics')) { <div class="err">{{ err('class12Physics') }}</div> }</div>
