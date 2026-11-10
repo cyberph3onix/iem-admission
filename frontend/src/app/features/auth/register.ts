@@ -9,6 +9,10 @@ import { AuthService } from '../../core/auth.service';
   template: `
   <div class="container" style="max-width:480px">
     <div class="card">
+      <div class="auth-logos">
+        <img src="iem_logo.png" alt="Institute of Engineering & Management" />
+        <img src="uem_logo.png" alt="University of Engineering & Management" />
+      </div>
       <h1>Create applicant account</h1>
       @if (error()) { <div class="alert error" role="alert">{{ error() }}</div> }
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
