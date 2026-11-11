@@ -6,7 +6,9 @@ const postFee = (token, body) => h.request(h.app).post('/api/applications/me/fee
 test('fee record: needs application, validated, one per application, visible to applicant and admin', async () => {
   const course = await h.makeCourse(); const { token } = await h.register(); const admin = await h.makeAdmin();
   expect((await postFee(token, { paymentReference: 'TXN1' })).status).toBe(404);          // no application yet
-  await h.completeApplication(token, course);
+  await h.completeApplication(token, course, { withFee: false });
+  const unpaid = await h.request(h.app).post('/api/applications/me/submit').set(h.auth(token));
+  expect(unpaid.status).toBe(400); expect(unpaid.body.errors.feePaid).toBe(false);       // fee unpaid -> cannot submit
   expect((await postFee(token, {})).status).toBe(400);
   expect((await h.request(h.app).get('/api/applications/me/fee').set(h.auth(token))).status).toBe(404);
   const ok = await postFee(token, { paymentReference: 'TXN1' });

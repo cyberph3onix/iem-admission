@@ -6,7 +6,7 @@ export interface DocumentMeta {
   _id: string; documentType: string; originalName: string; mimeType: string; size: number;
   validationStatus: 'Accepted' | 'Rejected'; validationMessage?: string; uploadedAt: string;
 }
-export interface Checklist { missingFields: string[]; invalidFields?: string[]; missingDocuments: string[]; complete: boolean; }
+export interface Checklist { missingFields: string[]; invalidFields?: string[]; missingDocuments: string[]; feePaid?: boolean; complete: boolean; }
 export interface Fee { _id: string; amount: number; currency: string; paymentReference: string; status: string; recordedAt: string; }
 export interface Verification { verified: boolean; remarks?: string; at?: string; }
 export interface Application {
@@ -34,6 +34,7 @@ export interface Application {
 export interface FormOptions {
   genders: string[]; categories: string[]; states: string[]; class10Boards: string[]; class12Boards: string[];
   entranceExams: string[]; examResultField: Record<string, string>; admissionSessions: string[];
+  examResultFormat?: Record<string, { pattern: string; hint: string }>;
   minYear: number; currentYear: number; fieldLabels: Record<string, string>;
 }
 export const courseName = (c: Course | string | undefined | null) => (c && typeof c === 'object' ? c.courseName : '');

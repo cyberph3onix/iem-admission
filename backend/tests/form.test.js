@@ -77,6 +77,12 @@ test('BVA/EP: Class 10 / Class 12 marks, years, and server-calculated percentage
     await accepts(token, { [k]: 100 }); await rejects(token, { [k]: 101 }, k);    // BVA-PCM-03/04
     await rejects(token, { [k]: 'abc' }, k);
   }
+  // Class 12 passing year must be later than Class 10 passing year.
+  await accepts(token, { class10PassingYear: 2020 });
+  await rejects(token, { class12PassingYear: 2020 }, 'class12PassingYear');    // same year
+  await rejects(token, { class12PassingYear: 2019 }, 'class12PassingYear');    // earlier year
+  await accepts(token, { class12PassingYear: 2021 });
+  await rejects(token, { class10PassingYear: 2021 }, 'class12PassingYear');    // moving Class 10 later is caught too
   // PCM marks are not summed into the overall aggregate.
   await accepts(token, { class12TotalMarks: 600, class12MarksObtained: 401 });
   a = await mine(token);
@@ -105,6 +111,7 @@ test('Entrance exam: only the selected exam result field is validated, stored an
   await accepts(token, { wbjeeRank: 1 });
   await accepts(token, { entranceExam: 'IEMJEE', iemjeeResult: 'Rank 12 / 99.1' });
   await rejects(token, { iemjeeResult: 'x'.repeat(31) }, 'iemjeeResult');
+  await rejects(token, { iemjeeResult: '<script>' }, 'iemjeeResult');           // outside the configured format
   await rejects(token, { entranceExam: 'GATE' }, 'entranceExam');
   await rejects(token, { entranceRollNumber: 'x'.repeat(31) }, 'entranceRollNumber');
 });
@@ -140,8 +147,12 @@ test('Decision table SUB-01..SUB-05: submission needs all fields and all five do
   await accepts(token, { entranceExam: 'WBJEE' });
   r = await submit(token);
   expect(r.status).toBe(400); expect(r.body.errors.missingFields).toEqual(['wbjeeRank']); expect(r.body.errors.missingDocuments).toEqual([]);
-  // SUB-01
+  // SUB-06: everything complete except the fee
   await accepts(token, { wbjeeRank: 1520 });
+  r = await submit(token);
+  expect(r.status).toBe(400); expect(r.body.errors.feePaid).toBe(false); expect(r.body.errors.missingFields).toEqual([]);
+  // SUB-01
+  expect((await h.payFee(token)).status).toBe(201);
   r = await submit(token);
   expect(r.status).toBe(200); expect(r.body.data.application.status).toBe('Submitted');
   // SUB-05 + STT-11: repeat submission and edits after submission are rejected

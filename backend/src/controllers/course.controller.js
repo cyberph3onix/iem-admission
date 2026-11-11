@@ -14,7 +14,7 @@ exports.formOptions = (_req, res) => {
     data: {
       genders: C.GENDERS, categories: C.CATEGORIES, states: C.INDIAN_STATES,
       class10Boards: C.CLASS10_BOARDS, class12Boards: C.CLASS12_BOARDS,
-      entranceExams: C.ENTRANCE_EXAMS, examResultField: C.EXAM_RESULT_FIELD,
+      entranceExams: C.ENTRANCE_EXAMS, examResultField: C.EXAM_RESULT_FIELD, examResultFormat: C.EXAM_RESULT_FORMAT,
       admissionSessions: C.admissionSessions(), minYear: C.MIN_YEAR, currentYear: new Date().getFullYear(),
       fieldLabels: fieldLabels(),
     },

@@ -72,10 +72,22 @@ export class ApplicantDashboard implements OnInit {
     entranceRollNumber: ['', [notBlank, Validators.maxLength(30)]],
     jeeMainPercentile: [null as number | null, [Validators.min(0), Validators.max(100), twoDecimals]],
     wbjeeRank: [null as number | null, [Validators.min(1), integer]],
-    iemjeeResult: ['', [notBlank, Validators.maxLength(30)]],
+    iemjeeResult: ['', [notBlank, Validators.maxLength(30), (c: AbstractControl) => this.iemFormat(c)]],
     // Section E
     admissionSession: [''], course: [''], coursePreference2: [''], coursePreference3: [''],
   });
+  /** IEMJEE result must match the format configured on the server (sent in the form options). */
+  private iemFormat(c: AbstractControl): ValidationErrors | null {
+    const f = this.opts()?.examResultFormat?.['IEMJEE'];
+    const v = typeof c.value === 'string' ? c.value.trim() : '';
+    return f && v && !new RegExp(f.pattern).test(v) ? { format: f.hint } : null;
+  }
+  /** Class 12 must be passed in a later year than Class 10. */
+  yearOrderError = () => {
+    const v = this.form.getRawValue(); const y10 = Number(v.class10PassingYear); const y12 = Number(v.class12PassingYear);
+    return v.class10PassingYear != null && v.class12PassingYear != null && Number.isInteger(y10) && Number.isInteger(y12) && y12 <= y10
+      ? 'Class 12 passing year must be later than the Class 10 passing year.' : '';
+  };
   // getRawValue so the read-only (disabled) form of a submitted application still shows its values.
   private values = toSignal(this.form.valueChanges.pipe(map(() => this.form.getRawValue())), { initialValue: this.form.getRawValue() });
 
@@ -90,13 +102,14 @@ export class ApplicantDashboard implements OnInit {
     if (!c) return [];
     return [...c.missingFields.map((f) => labels[f] ?? f),
       ...(c.invalidFields ?? []).map((f) => `${labels[f] ?? f} (invalid value)`),
-      ...c.missingDocuments.map((k) => this.types().find((t) => t.key === k)?.label ?? k)];
+      ...c.missingDocuments.map((k) => this.types().find((t) => t.key === k)?.label ?? k),
+      ...(c.feePaid === false ? ['Application fee (not yet paid)'] : [])];
   });
 
   ngOnInit() {
     this.api.courses().subscribe((c) => this.courses.set(c));
     this.api.documentTypes().subscribe((t) => this.types.set(t));
-    this.api.formOptions().subscribe((o) => this.opts.set(o));
+    this.api.formOptions().subscribe((o) => { this.opts.set(o); this.form.controls.iemjeeResult.updateValueAndValidity(); });
     // Changing the exam clears the other exams' result values (the backend also drops them).
     this.form.controls.entranceExam.valueChanges.pipe(distinctUntilChanged()).subscribe((exam) => {
       const keep = this.opts()?.examResultField[exam ?? ''];
@@ -139,10 +152,12 @@ export class ApplicantDashboard implements OnInit {
   err(f: string) {
     const c = this.form.get(f)!;
     if (this.fieldErrors()[f]) return this.fieldErrors()[f];
+    if (f === 'class12PassingYear' && !c.invalid && (c.touched || c.dirty) && this.yearOrderError()) return this.yearOrderError();
     if (!c.invalid || !(c.touched || c.dirty)) return '';
     const e = c.errors!;
     if (e['required'] || e['blank']) return 'This field is required.';
     if (e['length']) return `Must be ${e['length'].min}-${e['length'].max} characters.`;
+    if (e['format']) return e['format'];
     if (e['pattern']) return 'Use letters and spaces only.';
     if (e['future']) return 'Date of birth must be earlier than today.';
     if (e['integer']) return 'Enter a whole number.';
@@ -170,6 +185,7 @@ export class ApplicantDashboard implements OnInit {
   save() {
     this.form.markAllAsTouched();
     const invalid = Object.entries(this.form.controls).filter(([, c]) => c.invalid).map(([k]) => k);
+    if (this.yearOrderError()) invalid.push('class12PassingYear');
     if (invalid.length) {
       this.error.set(PERSONAL.some((k) => invalid.includes(k)) && !this.app()
         ? 'Complete Section A (personal information) to create your draft.'

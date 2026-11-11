@@ -39,6 +39,14 @@ const CLASS12_BOARDS = ['CBSE', 'ISC', 'WBCHSE', 'Other'];
 const ENTRANCE_EXAMS = ['JEE Main', 'WBJEE', 'IEMJEE'];
 // Which result field belongs to which exam; only that one is shown, stored and required.
 const EXAM_RESULT_FIELD = { 'JEE Main': 'jeeMainPercentile', WBJEE: 'wbjeeRank', IEMJEE: 'iemjeeResult' };
+// Result format for exams whose result is not a plain percentile or rank. Override with env vars
+// IEMJEE_RESULT_PATTERN (a regular expression) and IEMJEE_RESULT_HINT (the message shown on mismatch).
+const EXAM_RESULT_FORMAT = {
+  IEMJEE: {
+    pattern: process.env.IEMJEE_RESULT_PATTERN || '^[A-Za-z0-9][A-Za-z0-9 ./-]{0,29}$',
+    hint: process.env.IEMJEE_RESULT_HINT || 'Use 1-30 letters, digits, spaces or . / - (for example "Rank 12 / 99.1").',
+  },
+};
 const MIN_YEAR = 1950;
 
 // Admission sessions: ADMISSION_SESSIONS env var (comma separated) if set, otherwise the current and
@@ -52,5 +60,5 @@ function admissionSessions(now = new Date()) {
 
 module.exports = {
   ROLES, STATUS, DOCUMENT_TYPES, APPLICATION_FEE, GENDERS, CATEGORIES, INDIAN_STATES, CLASS10_BOARDS,
-  CLASS12_BOARDS, ENTRANCE_EXAMS, EXAM_RESULT_FIELD, MIN_YEAR, admissionSessions,
+  CLASS12_BOARDS, ENTRANCE_EXAMS, EXAM_RESULT_FIELD, EXAM_RESULT_FORMAT, MIN_YEAR, admissionSessions,
 };

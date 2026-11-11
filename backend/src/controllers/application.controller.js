@@ -27,7 +27,11 @@ async function completeness(app) {
   const { missingFields, invalidFields } = await formCompleteness(app.toObject());
   const accepted = await Document.find({ application: app._id, validationStatus: 'Accepted' }).distinct('documentType');
   const missingDocuments = DOCUMENT_TYPES.filter((t) => t.required && !accepted.includes(t.key)).map((t) => t.key);
-  return { missingFields, invalidFields, missingDocuments, complete: !missingFields.length && !invalidFields.length && !missingDocuments.length };
+  const feePaid = Boolean(await Fee.exists({ application: app._id, status: 'Paid' }));
+  return {
+    missingFields, invalidFields, missingDocuments, feePaid,
+    complete: !missingFields.length && !invalidFields.length && !missingDocuments.length && feePaid,
+  };
 }
 exports.completeness = completeness;
 exports.POPULATE = POPULATE;

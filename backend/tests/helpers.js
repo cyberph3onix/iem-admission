@@ -43,8 +43,10 @@ const auth = (t) => ({ Authorization: `Bearer ${t}` });
 const upload = (token, type, buf, name = 'f.pdf') =>
   request(app).post('/api/applications/me/documents').set(auth(token)).field('documentType', type).attach('file', buf, name);
 
-async function completeApplication(token, course) {
+async function completeApplication(token, course, { withFee = true } = {}) {
   await request(app).post('/api/applications').set(auth(token)).send(validForm(course));
   for (const t of DOCUMENT_TYPES) await upload(token, t.key, t.key === 'photograph' ? PNG : PDF, t.key === 'photograph' ? 'p.png' : 'f.pdf');
+  if (withFee) await payFee(token);
 }
-module.exports = { personal, app, request, connect, reset, register, makeAdmin, makeCourse, validForm, auth, upload, completeApplication, PDF, PNG };
+const payFee = (token, ref = 'TXN-TEST') => request(app).post('/api/applications/me/fee').set(auth(token)).send({ paymentReference: ref });
+module.exports = { personal, app, request, connect, reset, register, makeAdmin, makeCourse, validForm, auth, upload, completeApplication, payFee, PDF, PNG };

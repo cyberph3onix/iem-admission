@@ -60,6 +60,12 @@ function rollNumber(v) {
   const s = v.trim();
   return s.length > 30 ? { error: 'Must be at most 30 characters.' } : { value: s };
 }
+function iemjeeResult(v) {
+  const r = text(1, 30)(v);
+  if (r.error) return r;
+  const { pattern, hint } = C.EXAM_RESULT_FORMAT.IEMJEE;
+  return new RegExp(pattern).test(r.value) ? r : { error: hint };
+}
 const courseRef = (v) => (isId(v) ? { value: String(v) } : { error: 'Select a valid, active course.' });
 
 // --- the form definition -----------------------------------------------------------------------
@@ -94,7 +100,7 @@ const FIELDS = {
   entranceRollNumber: { label: 'Application / roll number', required: true, check: rollNumber },
   jeeMainPercentile: { label: 'JEE Main percentile', required: 'exam', check: percentile },
   wbjeeRank: { label: 'WBJEE rank', required: 'exam', check: int(1, undefined, 'Enter a rank: a whole number greater than 0.') },
-  iemjeeResult: { label: 'IEMJEE result', required: 'exam', check: text(1, 30) },
+  iemjeeResult: { label: 'IEMJEE result', required: 'exam', check: iemjeeResult },
   // Section E - admission session and course preferences
   admissionSession: { label: 'Admission session', required: true, check: oneOf(() => C.admissionSessions()) },
   course: { label: 'First course preference', required: true, check: courseRef },
@@ -118,6 +124,11 @@ async function crossChecks(merged, errors, keys) {
     if (Number.isInteger(o) && Number.isInteger(t) && o > t) {
       errors[`${p}MarksObtained`] ??= 'Marks obtained cannot exceed total marks.';
     }
+  }
+  // Class 12 must be passed in a later year than Class 10 (same or earlier year is rejected).
+  const y10 = merged.class10PassingYear; const y12 = merged.class12PassingYear;
+  if (Number.isInteger(y10) && Number.isInteger(y12) && y12 <= y10) {
+    errors.class12PassingYear ??= 'Class 12 passing year must be later than the Class 10 passing year.';
   }
   const [c1, c2, c3] = COURSE_FIELDS.map((k) => (merged[k] ? String(merged[k]) : ''));
   if (c2 && c2 === c1) errors.coursePreference2 ??= 'Must differ from the first preference.';
